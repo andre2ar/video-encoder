@@ -1,0 +1,17 @@
+services:
+  video-encoder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bash .docker/start.sh
+    restart: "no"
+    container_name: "video-encoder"
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    volumes:
+      - .:/app
+    networks:
+      - video-encoder
+networks:
+  video-encoder:
+    driver: bridge
