@@ -14,13 +14,14 @@ func init() {
 }
 
 type Job struct {
-	ID               string    `validate:"required,uuid4"`
-	OutputBucketPath string    `validate:"required"`
-	Status           string    `validate:"required"`
-	Video            *Video    `validate:"required"`
-	Error            string    `validate:"-"`
-	CreatedAt        time.Time `validate:"required"`
-	UpdatedAt        time.Time `validate:"required"`
+	ID               string    `json:"job_id" validate:"required,uuid4" gorm:"type:uuid;primary_key"`
+	OutputBucketPath string    `json:"output_bucket_path" validate:"required"`
+	Status           string    `json:"status" validate:"required"`
+	Video            *Video    `json:"video" validate:"required"`
+	VideoID          string    `json:"-" validate:"required" gorm:"column:video_id;type:uuid;notnull"`
+	Error            string    `json:"error" validate:"-"`
+	CreatedAt        time.Time `json:"created_at" validate:"required"`
+	UpdatedAt        time.Time `json:"updated_at" validate:"required"`
 }
 
 func NewJob(outputBucketPath string, status string, video *Video) (*Job, error) {
@@ -30,6 +31,7 @@ func NewJob(outputBucketPath string, status string, video *Video) (*Job, error) 
 		OutputBucketPath: outputBucketPath,
 		Status:           status,
 		Video:            video,
+		VideoID:          video.ID,
 		CreatedAt:        now,
 		UpdatedAt:        now,
 	}
