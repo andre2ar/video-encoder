@@ -2,6 +2,7 @@ package database
 
 import (
 	"log"
+	"time"
 
 	"github.com/andre2ar/video-encoder/domain"
 	"gorm.io/driver/postgres"
@@ -30,7 +31,7 @@ func NewDatabaseTest() *gorm.DB {
 
 	dbInstance.Env = "test"
 	dbInstance.DbTypeTest = "sqlite3"
-	dbInstance.DsnTest = ":memory"
+	dbInstance.DsnTest = ":memory:"
 	dbInstance.AutoMigrate = true
 	dbInstance.Debug = true
 
@@ -40,6 +41,14 @@ func NewDatabaseTest() *gorm.DB {
 	}
 
 	return connection
+}
+
+func CloseTestDB(db *gorm.DB) error {
+	sqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.Close()
 }
 
 func (d *Database) getDialector(dbType, dsn string) gorm.Dialector {
@@ -72,6 +81,24 @@ func (d *Database) Connect() (*gorm.DB, error) {
 	d.Db, err = gorm.Open(dialector, config)
 	if err != nil {
 		return nil, err
+	}
+
+	if d.DbType == "sqlite" || d.DbType == "sqlite3" || d.Env == "test" {
+		sqlDB, err := d.Db.DB()
+		if err != nil {
+			return nil, err
+		}
+
+		// Enable WAL mode for better concurrency
+		d.Db.Exec("PRAGMA journal_mode=WAL;")
+
+		// Enable foreign key constraints
+		d.Db.Exec("PRAGMA foreign_keys=ON;")
+
+		// Set connection pool settings
+		sqlDB.SetMaxOpenConns(1) // SQLite works better with limited connections
+		sqlDB.SetMaxIdleConns(1)
+		sqlDB.SetConnMaxLifetime(time.Hour)
 	}
 
 	if d.AutoMigrate {

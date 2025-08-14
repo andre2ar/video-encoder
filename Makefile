@@ -6,3 +6,6 @@ live-reload:
 
 up:
 	docker-compose up
+
+test:
+	docker-compose exec video-encoder go test ./...
